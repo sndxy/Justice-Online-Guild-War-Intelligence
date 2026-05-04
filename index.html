@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>戰報數據美化系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <style>
+        /* 載入多樣化字體 */
+        @import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai+Mono+TC&family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: white;
+            --text-color: #333;
+            --header-grad: linear-gradient(135deg, #1a2a6c, #2a5298);
+            --border-color: #eee;
+            --font-family: "芫荽", "LXGW WenKai Mono TC", sans-serif;
+        }
+
+        /* 風格定義 */
+        body.theme-dark {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --header-grad: linear-gradient(135deg, #0f172a, #334155);
+            --border-color: #334155;
+        }
+
+        body.theme-elegant {
+            --bg-color: #fdf6e3;
+            --card-bg: #eee8d5;
+            --text-color: #586e75;
+            --header-grad: linear-gradient(135deg, #b58900, #856404);
+            --border-color: #d3af37;
+        }
+
+        body { 
+            font-family: var(--font-family); 
+            background: var(--bg-color); 
+            color: var(--text-color);
+            padding: 20px; 
+            transition: all 0.3s ease;
+        }
+        
+        .container { max-width: 1450px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        
+        .header-section { 
+            text-align: center; margin-bottom: 25px; padding: 30px; 
+            background: var(--header-grad); border-radius: 15px; color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .config-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            background: rgba(0,0,0,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        .control-group label { font-size: 14px; font-weight: bold; }
+
+        select, input[type="file"] {
+            padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;
+        }
+
+        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; font-family: inherit; font-size: 15px; }
+        .btn-excel { background: #27ae60; }
+        .btn-pdf { background: #e74c3c; }
+        .btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; border-radius: 10px; overflow: hidden; }
+        th { background: rgba(0,0,0,0.1); padding: 15px; cursor: pointer; border-bottom: 2px solid var(--accent); transition: 0.2s; }
+        th:hover { background: rgba(0,0,0,0.2); }
+        td { border-bottom: 1px solid var(--border-color); padding: 12px; text-align: center; position: relative; font-weight: bold; }
+        
+        /* 能量條視覺優化 */
+        .bar { 
+            position: absolute; left: 6px; top: 6px; bottom: 6px; 
+            z-index: 0; opacity: 0.6; border-radius: 4px; 
+            transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
+        }
+        .val-text { position: relative; z-index: 5; font-size: 16px; }
+        
+        tr:hover td { background: rgba(255,255,255,0.1); }
+        
+        @media print { .config-panel, .btn-group { display: none; } }
+    </style>
+</head>
+<body class="theme-default">
+
+<div class="container">
+    <div class="header-section">
+        <h1>📊 幫會戰術數據中心</h1>
+    </div>
+
+    <div class="config-panel">
+        <div class="control-group">
+            <label>1. 選擇風格主題</label>
+            <select id="themeSelect" onchange="changeTheme()">
+                <option value="theme-default">極簡白瓷 (預設)</option>
+                <option value="theme-dark">深色科技 (推薦)</option>
+                <option value="theme-elegant">經典羊皮紙</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>2. 選擇切換字體</label>
+            <select id="fontSelect" onchange="changeFont()">
+                <option value="'芫荽', sans-serif">芫荽體 (圓潤流暢)</option>
+                <option value="'Noto Sans TC', sans-serif">黑體 (清晰專業)</option>
+                <option value="'Noto Serif TC', serif">楷體 (典雅莊重)</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>3. 數據上傳</label>
+            <input type="file" id="upload" accept=".xlsx, .csv">
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button id="dlBtn" class="btn btn-excel" onclick="exportExcel()">📥 匯出當前風格 Excel</button>
+        <button class="btn btn-pdf" onclick="window.print()">📄 另存 PDF 報表</button>
+    </div>
+
+    <table id="targetTable">
+        <thead><tr id="thr"></tr></thead>
+        <tbody id="tbd"></tbody>
+    </table>
+</div>
+
+<script>
+    let currentData = [];
+    let headers = [];
+    const colorMap = { '擊敗':'#fab1a0', '助攻':'#ffeaa7', '對玩家傷害':'#ff7675', '對建築傷害':'#fdcb6e', '治療值':'#55efc4', '承受傷害':'#bdc3c7', '重傷':'#b2bec3', '化羽/清泉':'#efb7ff', '焚骨':'#a29bfe' };
+
+    function changeTheme() {
+        document.body.className = document.getElementById('themeSelect').value;
+    }
+
+    function changeFont() {
+        document.body.style.setProperty('--font-family', document.getElementById('fontSelect').value);
+    }
+
+    document.getElementById('upload').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, {type: 'array'});
+            const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
+            let hIdx = raw.findIndex(row => row.includes("玩家名字"));
+            headers = raw[hIdx];
+            let list = [];
+            for (let i = hIdx + 1; i < raw.length; i++) {
+                let row = raw[i];
+                if (!row[0] || (row[0] && !row[1])) break; 
+                list.push(row);
+            }
+            currentData = list;
+            render();
+        };
+        reader.readAsArrayBuffer(e.target.files[0]);
+    });
+
+    function render() {
+        const tbd = document.getElementById('tbd'); tbd.innerHTML = '';
+        const thr = document.getElementById('thr'); thr.innerHTML = '';
+        if (!headers.length) return;
+
+        headers.forEach((h, i) => {
+            const th = document.createElement('th'); th.innerText = h + " ▾";
+            th.onclick = () => { currentData.sort((a,b)=>(parseFloat(b[i])||0)-(parseFloat(a[i])||0)); render(); };
+            thr.appendChild(th);
+        });
+
+        const maxes = headers.map((_, i) => Math.max(...currentData.map(r => parseFloat(r[i]) || 0)));
+        
+        currentData.forEach(row => {
+            const tr = document.createElement('tr');
+            row.forEach((cell, i) => {
+                const td = document.createElement('td');
+                if (i >= 2 && maxes[i] > 0) {
+                    const pct = ((parseFloat(cell)||0) / maxes[i]) * 100;
+                    td.innerHTML = `<div class="bar" style="width:${pct}%; background:${colorMap[headers[i]]||'#eee'}"></div><span class="val-text">${(typeof cell==='number')?cell.toLocaleString():(cell||0)}</span>`;
+                } else td.innerText = cell || '';
+                tr.appendChild(td);
+            });
+            tbd.appendChild(tr);
+        });
+    }
+
+    async function exportExcel() {
+        if (!currentData.length) return alert("請上傳數據");
+        const fontName = document.getElementById('fontSelect').selectedOptions[0].text.split(' ')[0];
+        
+        try {
+            const workbook = new ExcelJS.Workbook();
+            const ws = workbook.addWorksheet('戰報');
+            
+            const hr = ws.addRow(headers);
+            hr.eachCell(c => {
+                c.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF334155'} };
+                c.font = { color:{argb:'FFFFFFFF'}, bold:true, name: fontName };
+                c.alignment = { horizontal:'center' };
+            });
+
+            currentData.forEach(d => {
+                const r = ws.addRow(d);
+                r.eachCell(cell => {
+                    if (typeof cell.value === 'number') cell.numFmt = '#,##0';
+                    cell.font = { name: fontName, bold: true };
+                    cell.alignment = { horizontal:'center' };
+                });
+            });
+
+            ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
+            ws.views = [{ state: 'frozen', ySplit: 1 }];
+            ws.columns.forEach(c => c.width = 18);
+
+            const buf = await workbook.xlsx.writeBuffer();
+            saveAs(new Blob([buf]), `幫會戰報_${fontName}版.xlsx`);
+        } catch (e) { alert("匯出失敗"); }
+    }
+
+    function saveAs(blob, name) {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = name;
+        link.click();
+    }
+</script>
+</body>
+</html>
