@@ -1,0 +1,1 @@
+# Justice-Online-Guild-War-Intelligence
