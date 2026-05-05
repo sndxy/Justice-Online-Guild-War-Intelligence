@@ -24,17 +24,16 @@
         body { margin: 0; padding: 15px; background-color: var(--bg-color); color: var(--text-color); transition: 0.3s; }
         * { font-family: var(--font-main) !important; box-sizing: border-box; }
 
-        /* 強效數字優化：強制移除 0 的斜線並使用等寬數字 */
+        /* 終極數字優化：強制關閉斜線 0 字符特性 */
         .num-style { 
-            font-family: 'Consolas', 'Monaco', 'Noto Sans TC', sans-serif !important; /* 數字使用不帶斜線的系統字體 */
-            font-variant-numeric: tabular-nums; 
-            font-feature-settings: "zero" 0, "onum" 0, "pnum" 0; 
-            letter-spacing: 0px;
+            font-variant-numeric: tabular-nums lining-nums proportional-nums !important;
+            font-feature-settings: "zero" 0, "onum" 0, "pnum" 1 !important;
+            -webkit-font-feature-settings: "zero" 0, "onum" 0, "pnum" 1 !important;
         }
 
         .container { width: 99vw; margin: 0 auto; min-width: 1200px; }
         .main-title { text-align: center; color: white; padding: 15px; background: var(--header-grad); border-radius: 16px; margin-bottom: 20px; position: relative; }
-        .author-tag { position: absolute; right: 20px; bottom: 10px; font-size: 14px; opacity: 0.9; }
+        .author-tag { position: absolute; right: 20px; bottom: 10px; font-size: 14px; opacity: 0.9; font-weight: bold; }
         
         .top-tools { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; align-items: center; }
         .tool-group { background: var(--card-bg); padding: 8px 20px; border-radius: 50px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; }
@@ -238,7 +237,7 @@
         if(!t) return;
         if(t === "group_sort"){
             const order = {"進攻團":1, "防守團":2, "機動團":3, "未分配":4};
-            workingData.sort((a,b) => order[a[2]] - order[b[2]]);
+            workingData.sort((a,b) => (order[a[2]]||99) - (order[b[2]]||99));
             currentFilters.pos = "全部";
         } else if(["進攻團","防守團","機動團","未分配"].includes(t)) {
             currentFilters.pos = t;
