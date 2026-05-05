@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>歲歲戰報數據中心 V51</title>
+    <title>歲歲戰報數據中心 V52</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,6 +14,8 @@
             --bg-color: #f8fafc; --card-bg: #ffffff; --text-color: #1e293b;
             --header-grad: linear-gradient(135deg, #6366f1, #a855f7);
             --font-main: "LXGW WenKai Mono TC", sans-serif;
+            /* 修正 0 斜線：強制數字部分優先使用思源黑體，確保 0 是圓圈 */
+            --font-numbers: "Noto Sans TC", sans-serif;
             --accent: #f59e0b;
             --data-text: #000000;
         }
@@ -24,11 +26,12 @@
         body { margin: 0; padding: 15px; background-color: var(--bg-color); color: var(--text-color); transition: 0.3s; }
         * { font-family: var(--font-main) !important; box-sizing: border-box; }
 
-        /* 終極數字優化：強制關閉斜線 0 字符特性 */
+        /* 終極數字優化：透過優先級強行排除帶斜線的 0 */
         .num-style { 
-            font-variant-numeric: tabular-nums lining-nums proportional-nums !important;
-            font-feature-settings: "zero" 0, "onum" 0, "pnum" 1 !important;
-            -webkit-font-feature-settings: "zero" 0, "onum" 0, "pnum" 1 !important;
+            font-family: var(--font-numbers) !important;
+            font-variant-numeric: tabular-nums lining-nums !important;
+            font-feature-settings: "zero" 0 !important;
+            font-weight: 700;
         }
 
         .container { width: 99vw; margin: 0 auto; min-width: 1200px; }
@@ -49,7 +52,7 @@
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 14px; }
         
         th { background: #1e293b; color: #f8fafc; padding: 12px 5px; position: sticky; top: 0; z-index: 10; }
-        td { padding: 10px 5px; text-align: center; border-bottom: 1px solid #f1f5f9; position: relative; font-weight: 700; color: var(--data-text); }
+        td { padding: 10px 5px; text-align: center; border-bottom: 1px solid #f1f5f9; position: relative; color: var(--data-text); }
         
         .name-cell { font-weight: 800; text-align: left !important; padding-left: 12px; border-left: 5px solid transparent; }
         .name-cell-進攻團 { border-left-color: #ef4444; color: #ef4444; }
@@ -68,7 +71,7 @@
 
 <div class="container" id="capture-area">
     <div class="main-title">
-        <h1>🛡️ 歲歲戰報數據中心 V51</h1>
+        <h1>🛡️ 歲歲戰報數據中心 V52</h1>
         <div class="author-tag">🖋️ 作者：夜月臨空</div>
     </div>
 
