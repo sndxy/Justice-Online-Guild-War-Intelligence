@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>歲歲戰報數據中心 V50</title>
+    <title>歲歲戰報數據中心 V51</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,10 +24,12 @@
         body { margin: 0; padding: 15px; background-color: var(--bg-color); color: var(--text-color); transition: 0.3s; }
         * { font-family: var(--font-main) !important; box-sizing: border-box; }
 
-        /* 數字優化：移除 0 的斜線並保持等寬 */
+        /* 強效數字優化：強制移除 0 的斜線並使用等寬數字 */
         .num-style { 
+            font-family: 'Consolas', 'Monaco', 'Noto Sans TC', sans-serif !important; /* 數字使用不帶斜線的系統字體 */
             font-variant-numeric: tabular-nums; 
-            font-feature-settings: "zero" 0; /* 關閉斜線 0 */
+            font-feature-settings: "zero" 0, "onum" 0, "pnum" 0; 
+            letter-spacing: 0px;
         }
 
         .container { width: 99vw; margin: 0 auto; min-width: 1200px; }
@@ -67,7 +69,7 @@
 
 <div class="container" id="capture-area">
     <div class="main-title">
-        <h1>🛡️ 歲歲戰報數據中心 V50</h1>
+        <h1>🛡️ 歲歲戰報數據中心 V51</h1>
         <div class="author-tag">🖋️ 作者：夜月臨空</div>
     </div>
 
