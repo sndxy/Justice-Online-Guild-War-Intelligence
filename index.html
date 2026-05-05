@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>歲歲戰報數據中心 V49</title>
+    <title>歲歲戰報數據中心 V50</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,8 +24,15 @@
         body { margin: 0; padding: 15px; background-color: var(--bg-color); color: var(--text-color); transition: 0.3s; }
         * { font-family: var(--font-main) !important; box-sizing: border-box; }
 
+        /* 數字優化：移除 0 的斜線並保持等寬 */
+        .num-style { 
+            font-variant-numeric: tabular-nums; 
+            font-feature-settings: "zero" 0; /* 關閉斜線 0 */
+        }
+
         .container { width: 99vw; margin: 0 auto; min-width: 1200px; }
-        .main-title { text-align: center; color: white; padding: 15px; background: var(--header-grad); border-radius: 16px; margin-bottom: 20px; }
+        .main-title { text-align: center; color: white; padding: 15px; background: var(--header-grad); border-radius: 16px; margin-bottom: 20px; position: relative; }
+        .author-tag { position: absolute; right: 20px; bottom: 10px; font-size: 14px; opacity: 0.9; }
         
         .top-tools { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; align-items: center; }
         .tool-group { background: var(--card-bg); padding: 8px 20px; border-radius: 50px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; gap: 10px; align-items: center; }
@@ -59,7 +66,10 @@
 <body class="theme-sakura">
 
 <div class="container" id="capture-area">
-    <div class="main-title"><h1>🛡️ 歲歲戰報數據中心 V49</h1></div>
+    <div class="main-title">
+        <h1>🛡️ 歲歲戰報數據中心 V50</h1>
+        <div class="author-tag">🖋️ 作者：夜月臨空</div>
+    </div>
 
     <div class="top-tools">
         <div class="tool-group">
@@ -95,10 +105,10 @@
     </div>
 
     <div class="honor-grid" id="honorBoard">
-        <div class="honor-card"><div>⚔️ 輸出王</div><div class="honor-name" id="mvp-dmg-n">-</div><div id="mvp-dmg-v">0</div></div>
-        <div class="honor-card"><div>🏰 折塔王</div><div class="honor-name" id="mvp-bld-n">-</div><div id="mvp-bld-v">0</div></div>
-        <div class="honor-card"><div>👼 治療王</div><div class="honor-name" id="mvp-heal-n">-</div><div id="mvp-heal-v">0</div></div>
-        <div class="honor-card"><div>✨ 化羽王</div><div class="honor-name" id="mvp-wing-n">-</div><div id="mvp-wing-v">0</div></div>
+        <div class="honor-card"><div>⚔️ 輸出王</div><div class="honor-name" id="mvp-dmg-n">-</div><div class="num-style" id="mvp-dmg-v">0</div></div>
+        <div class="honor-card"><div>🏰 折塔王</div><div class="honor-name" id="mvp-bld-n">-</div><div class="num-style" id="mvp-bld-v">0</div></div>
+        <div class="honor-card"><div>👼 治療王</div><div class="honor-name" id="mvp-heal-n">-</div><div class="num-style" id="mvp-heal-v">0</div></div>
+        <div class="honor-card"><div>✨ 化羽王</div><div class="honor-name" id="mvp-wing-n">-</div><div class="num-style" id="mvp-wing-v">0</div></div>
     </div>
 
     <div class="chart-grid" id="chartArea">
@@ -152,9 +162,7 @@
             const jobIdx = srcH.indexOf("職業");
             for(let i = hIdx + 1; i < raw.length; i++) {
                 const name = raw[i][nameIdx];
-                // 關鍵修正：精準判定是否為有效玩家，遇到空白或下一個幫會標記則停止
                 if(!name || name.toString().trim() === "" || name.toString().includes("幫會：")) break;
-                
                 let row = [false, name, "未分配", raw[i][jobIdx] || "未知"];
                 headers.slice(4).forEach(h => row.push(raw[i][srcH.indexOf(h)] || 0));
                 rawData.push(row);
@@ -182,7 +190,7 @@
             const th = document.createElement('th');
             if (i === 0) th.innerHTML = `<input type="checkbox" ${isAllChecked?'checked':''} onclick="toggleAll()">`;
             else if (i === 1) th.innerHTML = `姓名<br><select class="top-select" onchange="currentFilters.name=this.value; render()"><option value="">全部</option>${names.map(n=>`<option value="${n}" ${currentFilters.name===n?'selected':''}>${n}</option>`).join('')}</select>`;
-            else if (i === 2) th.innerHTML = `位置<br><select class="top-select" onchange="currentFilters.pos=this.value; render()"><option value="全部" ${currentFilters.pos==='全部'?'selected':''}>全部</option><option value="進攻團" ${currentFilters.pos==='進攻團'?'selected':''}>進攻</option><option value="防守團" ${currentFilters.pos==='防守團'?'selected':''}>防守</option><option value="機動團" ${currentFilters.pos==='機動團'?'selected':''}>機動</option></select>`;
+            else if (i === 2) th.innerHTML = `位置<br><select class="top-select" onchange="handleSort(this.value, 2)"><option value="">排序/篩選</option><option value="group_sort">▼ 團別排序</option><option value="進攻團">只看進攻</option><option value="防守團">只看防守</option><option value="機動團">只看機動</option><option value="未分配">只看未分配</option></select>`;
             else if (i === 3) th.innerHTML = `職業<br><select class="top-select" onchange="currentFilters.job=this.value; render()"><option value="">全部</option>${jobs.map(j=>`<option value="${j}" ${currentFilters.job===j?'selected':''}>${j}</option>`).join('')}</select>`;
             else th.innerHTML = `${h}<br><select class="top-select" onchange="handleSort(this.value, ${i})"><option value="">排序</option><option value="desc">▼大</option><option value="asc">▲小</option></select>`;
             trH.appendChild(th);
@@ -204,7 +212,7 @@
                     const val = parseFloat(cell) || 0;
                     const hName = headers[i];
                     const col = barColors[hName] || barColors['default'];
-                    td.innerHTML = `<div class="data-bar" style="width:${maxes[i]>0?(val/maxes[i]*100):0}%; background:${col}"></div><span style="position:relative">${val.toLocaleString()}</span>`;
+                    td.innerHTML = `<div class="data-bar" style="width:${maxes[i]>0?(val/maxes[i]*100):0}%; background:${col}"></div><span class="num-style" style="position:relative">${val.toLocaleString()}</span>`;
                 } else td.innerText = cell;
                 tr.appendChild(td);
             });
@@ -223,7 +231,20 @@
     }
     function syncCheck(el, n) { workingData.find(r=>r[1]===n)[0] = el.checked; }
     function updatePos(n, v) { workingData.find(r=>r[1]===n)[2] = v; render(); }
-    function handleSort(t, i) { if(t) workingData.sort((a,b)=> t==='desc' ? (parseFloat(b[i])||0)-(parseFloat(a[i])||0) : (parseFloat(a[i])||0)-(parseFloat(b[i])||0)); render(); }
+    
+    function handleSort(t, i) { 
+        if(!t) return;
+        if(t === "group_sort"){
+            const order = {"進攻團":1, "防守團":2, "機動團":3, "未分配":4};
+            workingData.sort((a,b) => order[a[2]] - order[b[2]]);
+            currentFilters.pos = "全部";
+        } else if(["進攻團","防守團","機動團","未分配"].includes(t)) {
+            currentFilters.pos = t;
+        } else {
+            workingData.sort((a,b)=> t==='desc' ? (parseFloat(b[i])||0)-(parseFloat(a[i])||0) : (parseFloat(a[i])||0)-(parseFloat(b[i])||0));
+        }
+        render(); 
+    }
 
     function updateCharts() {
         if(!workingData.length) return;
