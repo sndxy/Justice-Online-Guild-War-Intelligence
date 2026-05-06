@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>歲歲戰報數據中心 V59 - 終極戰略版</title>
+    <title>歲歲戰報數據中心 V60 - 終極戰略版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -97,7 +97,7 @@
 
 <div class="container" id="capture-area">
     <div class="main-title">
-        <h1>🛡️ 歲歲戰報數據中心 V59 - 終極戰略版</h1>
+        <h1>🛡️ 歲歲戰報數據中心 V60 - 終極戰略版</h1>
         <div class="author-tag">🖋️ 作者：臨空</div>
     </div>
 
@@ -469,7 +469,7 @@
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `歲歲戰報V59_獨立分享版_${Date.now()}.html`;
+        a.download = `歲歲戰報V60_獨立分享版_${Date.now()}.html`;
         a.click();
         document.getElementById('embedded-data').textContent = "null";
     }
@@ -481,7 +481,7 @@
         const hIdx = headers.indexOf('治療值');
         const kIdx = headers.indexOf('擊敗');
         const aIdx = headers.indexOf('助攻');
-        const deathIdx = headers.indexOf('重傷'); // V59 新增重傷欄位解析
+        const deathIdx = headers.indexOf('重傷');
         
         let maxD = 1, maxH = 1;
         workingData.forEach(r => {
@@ -498,7 +498,7 @@
             let death = deathIdx > -1 ? parseFloat(r[deathIdx])||0 : 0;
             
             let kda = kill + assist; 
-            let kdaRatio = (kill + assist) / Math.max(1, death); // KDA計算防呆
+            let kdaRatio = (kill + assist) / Math.max(1, death);
             
             let score = ((dmg / maxD) * 100 * 0.4) + ((heal / maxH) * 100 * 0.3) + (kda * 0.5);
             scoredData.push({ 
@@ -534,29 +534,27 @@
             displayList = scoredData.filter(d => d.group === targetGroup).sort((a,b) => b.score - a.score);
         }
 
+        // V60：優化 Flex 排版防止右側數據掉下來或左側標籤擠成直排
         displayList.forEach(m => {
             let primaryLabel = (mvpMode.includes('job')) ? m.job : m.group;
             let secondaryLabel = (mvpMode.includes('job')) ? m.group : m.job;
             
-            // V59 新增 KDA 顯示
             mvpList.innerHTML += `
-                <div class="mvp-item">
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <span class="mvp-job" style="width:70px; text-align:center;">${primaryLabel}</span>
-                        <span style="font-weight:bold; color:white;">${m.name}</span>
-                        <span class="mvp-group">${secondaryLabel}</span>
+                <div class="mvp-item" style="gap: 10px;">
+                    <div style="display:flex; gap:8px; align-items:center; flex: 1; min-width: 0;">
+                        <span class="mvp-job" style="min-width:40px; text-align:center; flex-shrink:0;">${primaryLabel}</span>
+                        <span style="font-weight:bold; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.name}</span>
+                        <span class="mvp-group" style="flex-shrink:0; white-space:nowrap; margin-left:0;">${secondaryLabel}</span>
                     </div>
-                    <div>
+                    <div style="display:flex; align-items:center; flex-shrink:0; white-space:nowrap;">
                         <span style="font-size:12px; color:#94a3b8; margin-right:8px;">參團: <span class="num-style" style="color:white; font-size:14px;">${m.kda}</span></span>
                         <span style="font-size:12px; color:#94a3b8; margin-right:8px;">KDA: <span class="num-style" style="color:#f59e0b; font-size:14px;">${m.kdaRatio}</span></span>
-                        <span style="font-size:12px; color:#94a3b8;">Score: </span>
-                        <span class="num-style mvp-score">${m.score}</span>
+                        <span style="font-size:12px; color:#94a3b8;">Score: <span class="num-style mvp-score" style="margin-left:4px;">${m.score}</span></span>
                     </div>
                 </div>
             `;
         });
 
-        // 象限圖渲染
         const qXAttr = document.getElementById('quadX').value;
         const qYAttr = document.getElementById('quadY').value;
         const selJob = document.getElementById('quadJob').value;
